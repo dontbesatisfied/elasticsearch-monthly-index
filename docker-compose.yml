@@ -1,0 +1,41 @@
+# docker-compose -f ./docker-compose.yml up -d
+version: "2.4"
+
+services:
+  elasticsearch:
+    mem_limit: "16g"
+    container_name: elasticsearch-test
+    image: elasticsearch:7.9.3
+    # https://www.elastic.co/guide/en/elasticsearch/reference/current/network.host.html
+    # Set Xmx and Xms to no more than 50% of your physical RAM.
+    environment:
+      - cluster.name=docker-cluster
+      - ES_JAVA_OPTS=-Xms8g -Xmx8g
+      - node.name=master
+      - bootstrap.memory_lock=true #swap off
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - 9210:9200
+      - 9310:9300
+
+    # command: >
+    #   /bin/sh -c "/usr/share/elasticsearch/bin/elasticsearch-plugin list | grep -q analysis-nori
+    #   || /usr/share/elasticsearch/bin/elasticsearch-plugin install analysis-nori;
+    #   /usr/local/bin/docker-entrypoint.sh"
+    # volumes:
+    #   - $PWD/nori-dictionary/user_dictionary.txt:/usr/share/elasticsearch/config/user_dictionary.txt
+    #   - $PWD/nori-dictionary/stopword.txt:/usr/share/elasticsearch/config/stopword.txt
+    #   - $PWD/nori-dictionary/synonym.txt:/usr/share/elasticsearch/config/synonym.txt
+    networks:
+      - elasticsearch-test-net
+
+networks:
+  elasticsearch-test-net:
+    driver: bridge
